@@ -25,13 +25,12 @@ vect = HashingVectorizer(decode_error='ignore',
 
 clf = SGDClassifier(loss='log', random_state=1, n_iter=1)
 
+df = pd.read_csv('news_data_small.csv', encoding='utf-8')
 
-df = pd.read_csv('./movie_data_small.csv', encoding='utf-8')
-
-#df.loc[:100, :].to_csv('./movie_data_small.csv', index=None)
+# df.loc[:100, :].to_csv('./news_data_small.csv', index=None)
 
 
-X_train = df['review'].values
+X_train = df['news'].values
 y_train = df['sentiment'].values
 
 X_train = vect.transform(X_train)

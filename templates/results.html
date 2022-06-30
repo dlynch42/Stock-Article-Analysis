@@ -1,16 +1,16 @@
 <!doctype html>
    <html>
      <head>
-       <title>Movie Classification</title>
+       <title>Stock News Classification</title>
          <link rel="stylesheet"
                href="{{ url_for('static', filename='style.css') }}">
      </head>
     <body>
 
-       <h3>Your movie review:</h3>
+       <h3>Your news article review:</h3>
        <div>{{ content }}</div>
        <h3>Prediction:</h3>
-       <div>This movie review is <strong>{{ prediction }}</strong>
+       <div>This news review is <strong>{{ prediction }}</strong>
            (probability: {{ probability }}%).</div>
        <div id='button'>
          <form action="/thanks" method="post">

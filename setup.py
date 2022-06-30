@@ -15,11 +15,9 @@ from sklearn.pipeline import Pipeline
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=DeprecationWarning)
 
-# 1) Preparing IMDb movie review data for test processing
-# Preprocessing Movie Dataset into more convenient format
-df = pd.read_csv('')
+# Preprocessing News Dataset
+df = pd.read_csv('news_data.csv')
 
-# 2) Introducing the Bag-of-Words Model
 # Transforming Words into Feature Vectors, CountVectorizer takes array of text and constructs bag-of-words model
 # Transform following three sentences into sparse feature vectors
 count = CountVectorizer()
@@ -29,9 +27,9 @@ docs = np.array([
     'The sun is shining, the weather is sweet',
     'and one and one is two'])
 bag = count.fit_transform(docs)
-# Print contents of vocabulary
+# Contents of vocabulary
 print(count.vocabulary_)
-# Print Feature Vectors
+# Feature Vectors
 print(bag.toarray())
 
 # Assessing word relevancy via term frequency-inverse document frequency (tf-idf)
@@ -40,24 +38,25 @@ tfidf = TfidfTransformer(use_idf=True,
                          norm='l2',
                          smooth_idf=True)
 np.set_printoptions(precision=2)
-print(tfidf.fit_transform(count.fit_transform(docs)).toarray())
+# print(tfidf.fit_transform(count.fit_transform(docs)).toarray())
 
 # Cleaning Text Data
 # Illustrate importance of cleaning data
-print(df.loc[0, 'review'][-50:])
+# print(df.loc[0, 'news'][-50:])
+
 # Remove all punctuation marks except emoticon characters (useful for sentiment analysis)
 def preprocessor(text):
-    text = re.sub('<[^>]*>', '', text)      # remove HTML markup from reviews
+    text = re.sub('<[^>]*>', '', text)      # remove HTML markup from news
     emoticons = re.findall('(?::|;|=)(?:-)?(?:\)|\(|D|P)',
                            text)            # regex to find emoticons
     text = (re.sub('[\W]+', ' ', text.lower() ) +
             ' '.join(emoticons).replace('-', ''))      # remove all non-word characters and convert text into lowercase letters
     return text
 # Confirm preprocessor works correctly
-print(preprocessor(df.loc[0, 'review'][-50:]))
+print(preprocessor(df.loc[0, 'news'][-50:]))
 print(preprocessor("</a>This :) is :( a test :-)!"))        # should remove punctuation and '-'
-# Apply preprocessor fxn to all reviews in df
-df['review'] = df['review'].apply(preprocessor)
+# Apply preprocessor fxn to all news in df
+df['news'] = df['news'].apply(preprocessor)
 
 # Processing docs into tokens
 # Tokenize docs by splitting into individual words, split cleaned docs at whitespace characters
@@ -82,12 +81,12 @@ print([w for w in tokenizer_porter('a runner likes running and runs a lot')[-10:
 
 
 
-# 3) Training LR model for document classification, classify reviews into positive and negative reviews
-# Divide docs into 25000 training and 25000 testing
-X_train = df.loc[:25000, 'review'].values
-y_train = df.loc[:25000, 'sentiment'].values
-X_test = df.loc[25000:, 'review'].values
-y_test = df.loc[25000:, 'sentiment'].values
+# Train LR model for document classification, classify news into positive, neutral, and negative news
+# Divide docs into 4000 training and 5000 testing
+X_train = df.loc[:4000, 'news'].values
+y_train = df.loc[:4000, 'sentiment'].values
+X_test = df.loc[4000:, 'news'].values
+y_test = df.loc[4000:, 'sentiment'].values
 
 # Find optimal set of parameters for LR model using 5-fold stratified cross-validation
 tfidf = TfidfVectorizer(strip_accents=None,
@@ -108,11 +107,10 @@ param_grid = [{'vect__ngram_range': [(1, 1)],
 lr_tfidf = Pipeline([('vect', tfidf),
                      ('clf',
                       LogisticRegression(random_state=0))])
-# GridSearch is on MLBookScratch.txt
 
 
 
-# 4) Working with Big Data - Online Algorithms and Out of Core Learning
+# Online Algorithms and Out of Core Learning
 nltk.download('stopwords')
 
 # Define tokenizer fxn that cleans unprocessed text data
@@ -135,7 +133,7 @@ def stream_docs(path):
             yield text, label
 
 # Verify stream_docs works correctly
-print(next(stream_docs(path='movie_data.csv')))
+print(next(stream_docs(path='news_data.csv')))
 
 # Define fxn get_minibatch, take doc stream from doc_stream and return particular number of docs specified by size parameter
 def get_minibatch(doc_stream, size):
@@ -155,7 +153,7 @@ vect = HashingVectorizer(decode_error='ignore',
                          preprocessor=None,
                          tokenizer=tokenizer)
 clf = SGDClassifier(loss='log', random_state=1, max_iter=1)
-doc_stream = stream_docs(path='movie_data.csv')
+doc_stream = stream_docs(path='news_data.csv')
 
 # Start OoC learning
 pbar = pyprind.ProgBar(45)
@@ -168,26 +166,24 @@ for _ in range(45):
     clf.partial_fit(X_train, y_train, classes=classes)
     pbar.update()
 
-# Use last 5000 docs to evaluate performance of model
-X_test, y_test = get_minibatch(doc_stream, size=5000)
+# Use last 1000 docs to evaluate performance of model
+X_test, y_test = get_minibatch(doc_stream, size=1000)
 X_test = vect.transform(X_test)
 print('Accuracy: %.3f' % clf.score(X_test, y_test))
 
-# Use last 5000 docs to update model
+# Use last 1000 docs to update model
 clf = clf.partial_fit(X_test, y_test)
 
 
 
-# 5) Topic Modeling with Latent Dirichlet Allocation (LDA, not same as chapter 5)
-# LDA with Scikit-Learn
-# Load dataset into a pandas DF
-df = pd.read_csv('movie_data.csv', encoding='utf-8')
+# LDA with Scikit-Learn; Load dataset into a pandas DF
+df = pd.read_csv('news_data.csv', encoding='utf-8')
 
 # Use CountVectorizer to create bag-of-words matrix as input to LDA, use English Stop word library
 count = CountVectorizer(stop_words='english',
                         max_df=.1,
                         max_features=5000)
-X = count.fit_transform(df['review'].values)
+X = count.fit_transform(df['news'].values)
 
 # Fit LDA Estimator to Bag-Of-Words Matrix and infer 10 different topics from the docs
 lda = LatentDirichletAllocation(n_components=10,
@@ -204,11 +200,12 @@ for topic_idx, topic in enumerate(lda.components_):
     print(" ".join([feature_names[i]
                     for i in topic.argsort()\
                     [:-n_top_words - 1:-1]]))
-# Confirm categories make sense based off reviews, plot three movies from horror movies category (category 6 at index 5)
+
+# Confirm categories make sense based off news, plot three movies from horror movies category (category 6 at index 5)
 horror = X_topics[:, 5].argsort()[::-1]     # remove 'horror' from this line and 'movie' from line above since this is about stocks
 for iter_idx, stock_idx in enumerate(horror[:3]):
     print('\nHorror Movie #%d:' % (iter_idx + 1))
-    print(df['review'][stock_idx][:300], '...')
+    print(df['news'][stock_idx][:300], '...')
 
 
 

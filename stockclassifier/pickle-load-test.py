@@ -5,7 +5,7 @@ import numpy as np
 clf = pickle.load(open('classifier.pkl', 'rb'))
 
 
-label = {0: 'negative', 1: 'positive'}
+label = {-1: 'negative', 0: 'neutral', 1: 'positive'}
 example = ['Great earnings report']
 
 X = vect.transform(example)

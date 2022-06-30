@@ -18,7 +18,7 @@ clf = pickle.load(open(os.path.join(cur_dir,
 db = os.path.join(cur_dir, 'stock_review.sqlite')
 
 def classify(document):
-    label = {0: 'negative', 1: 'positive'}
+    label = {-1: 'negative', 0: 'neutral', 1: 'positive'}
     X = vect.transform([document])
     y = clf.predict(X)[0]
     proba = np.max(clf.predict_proba(X))
@@ -44,7 +44,7 @@ class ReviewForm(Form):
 @app.route('/')
 def index():
     form = ReviewForm(request.form)
-    return render_template('reviewform.html', form=form)
+    return render_template('newsform.html', form=form)
 
 @app.route('/results', methods=['POST'])
 def results():
@@ -56,7 +56,7 @@ def results():
                                content=review,
                                prediction=y,
                                probability=round(proba*100, 2))
-        return render_template('reviewform.html', form=form)
+        return render_template('newsform.html', form=form)
 
 @app.route('/thanks', methods=['POST'])
 def feedback():
@@ -64,7 +64,7 @@ def feedback():
     review = request.form['review']
     prediction = request.form['prediction']
 
-    inv_label = {'negative': 0, 'positive': 1}
+    inv_label = {'negative': -1, 'neutral': 0, 'positive': 1}
     y = inv_label[prediction]
     if feedback == 'Incorrect':
         y=int(not (y))
