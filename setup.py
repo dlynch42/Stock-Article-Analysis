@@ -17,7 +17,7 @@ warnings.simplefilter(action='ignore', category=DeprecationWarning)
 
 # 1) Preparing IMDb movie review data for test processing
 # Preprocessing Movie Dataset into more convenient format
-df = pd.read_csv('movie_data.csv')
+df = pd.read_csv('')
 
 # 2) Introducing the Bag-of-Words Model
 # Transforming Words into Feature Vectors, CountVectorizer takes array of text and constructs bag-of-words model
@@ -82,7 +82,7 @@ print([w for w in tokenizer_porter('a runner likes running and runs a lot')[-10:
 
 
 
-# 3) Training LR model for document classification, classify reviews into positive and negative reivews
+# 3) Training LR model for document classification, classify reviews into positive and negative reviews
 # Divide docs into 25000 training and 25000 testing
 X_train = df.loc[:25000, 'review'].values
 y_train = df.loc[:25000, 'sentiment'].values
