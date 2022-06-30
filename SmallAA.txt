@@ -1,0 +1,10 @@
+What it does:
+    Input article text/scrapes from URL
+
+    Analyzes keywords and sentiment
+
+    Produces opinion on the article (positive news/negative news)
+
+    For long articles, produces key findings/points to pay attention to
+
+    Returns key numbers and statistics
